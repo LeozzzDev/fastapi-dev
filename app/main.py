@@ -95,7 +95,8 @@ async def update_post(id: int, updated_post: Post):
 
     with psycopg2.connect(host="localhost", database="social", user="leo", 
     password="psw", cursor_factory=RealDictCursor) as postgres_connection:
-
+    
+        postgres_connection.autocommit = True
         with postgres_connection.cursor() as cursor:
 
             cursor.execute("""UPDATE posts
