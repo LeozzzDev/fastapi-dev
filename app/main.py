@@ -2,6 +2,12 @@ from random import randrange
 from typing import Optional
 from fastapi import FastAPI, HTTPException, status, Response
 from pydantic import BaseModel
+import psycopg2
+from psycopg2.extras import RealDictCursor
+
+app = FastAPI()
+
+
 
 class Post(BaseModel):
     title: str
@@ -9,9 +15,9 @@ class Post(BaseModel):
     published: bool = True
     rating: Optional[int] = None
 
-posts = []
 
-app = FastAPI()
+
+posts = []
 
 def get_post_by_id(id):
     for post in posts:
@@ -23,12 +29,9 @@ def get_index_by_post_id(id):
         if post['id'] == id:
             return i
 
-@app.get("/")
-async def get():
-    return "try /posts"
-
 @app.get("/posts")
 async def get_posts():
+    cursor.execute(get_create_database_query())
     return {"data": posts}
 
 @app.get("/posts/{id}")
