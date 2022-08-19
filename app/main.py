@@ -6,6 +6,9 @@ from sqlalchemy.orm import Session
 
 models.Base.metadata.create_all(bind=engine)
 
+# postgres docker container
+# docker run --name postgres-container -e POSTGRES_USER=leo -e POSTGRES_PASSWORD=psw -p 5432:5432 -v /data:/var/lib/postgresql/data -d postgres
+
 app = FastAPI()
 
 @app.get("/posts")
