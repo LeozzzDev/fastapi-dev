@@ -1,8 +1,8 @@
-
 from fastapi import FastAPI, HTTPException, status, Depends
 from . import models, schemas
 from .database import engine, get_db
 from sqlalchemy.orm import Session
+from typing import List
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -11,27 +11,26 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-@app.get("/posts")
+@app.get("/posts", response_model=List[schemas.PostResponse])
 async def get_posts(db: Session = Depends(get_db)):
-    
+
     posts = db.query(models.Post).all()
     return posts
 
-@app.get("/posts/{id}")
+@app.get("/posts/{id}", response_model=schemas.PostResponse)
 async def get_post(id: int, db: Session = Depends(get_db)):
     found_post = db.query(models.Post).filter(models.Post.id == id).first()
     if not found_post:
         raise HTTPException(status_code=404, detail=f"post with id:{id} not found")
     return found_post
 
-@app.post("/posts", status_code=status.HTTP_201_CREATED)
-async def create_post(post: schemas.CreatePost, db: Session = Depends(get_db)):
+@app.post("/posts", status_code=status.HTTP_201_CREATED, response_model=schemas.PostResponse)
+async def create_post(post: schemas.CreatePostRequest, db: Session = Depends(get_db)):
     new_post = models.Post(**post.dict())
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
     return new_post
-
 
 @app.delete("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_post(id: int, db: Session = Depends(get_db)):
@@ -44,7 +43,7 @@ async def delete_post(id: int, db: Session = Depends(get_db)):
     db.commit()
 
 @app.put("/posts/{id}", status_code=status.HTTP_204_NO_CONTENT)
-async def update_post(id: int, updated_post: schemas.PostBase, db: Session = Depends(get_db)):
+async def update_post(id: int, updated_post: schemas.UpdatePostRequest, db: Session = Depends(get_db)):
 
     found_post = db.query(models.Post).filter(models.Post.id == id)
 
