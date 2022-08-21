@@ -10,9 +10,11 @@ posts_router = APIRouter(prefix="/posts")
 @posts_router.get("/", response_model=List[schemas.Post])
 async def get_posts(
     db: Session = Depends(get_db), 
-    current_user: int = Depends(oauth2.get_current_user)
+    current_user: int = Depends(oauth2.get_current_user),
+    page_size: int = 10,
+    page: int = 0
 ):
-    posts = db.query(models.Post).all()
+    posts = db.query(models.Post).limit(page_size).all()
     return posts
 
 @posts_router.get("/{id}", response_model=schemas.Post)
@@ -32,7 +34,7 @@ async def create_post(
     db: Session = Depends(get_db), 
     current_user: int = Depends(oauth2.get_current_user)
 ):
-    created_post = models.Post(**post.dict())
+    created_post = models.Post(user_id = current_user.id, **post.dict())
     db.add(created_post)
     db.commit()
     db.refresh(created_post)
@@ -49,6 +51,9 @@ async def delete_post(
     if not found_post.first():
         raise HTTPException(status_code=404, detail=f"post with id:{id} not found")
     
+    if found_post.first().user_id != current_user.id:
+        raise HTTPException(status_code=403, detail=f"Not authorized to perform operation!")
+
     found_post.delete(synchronize_session=False)
     db.commit()
 
@@ -59,11 +64,15 @@ async def update_post(
     db: Session = Depends(get_db),
     current_user: int = Depends(oauth2.get_current_user)
 ):
-    found_post = db.query(models.Post).filter(models.Post.id == id)
+    found_post_query = db.query(models.Post).filter(models.Post.id == id)
+    found_post = found_post_query.first()
 
-    if not found_post.first():
+    if not found_post:
         raise HTTPException(status_code=404, detail=f"post with id:{id} not found")
+    
+    if found_post.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail=f"Not authorized to perform operation!")
 
-    found_post.update(updated_post.dict(), synchronize_session=False)
+    found_post_query.update(updated_post.dict(), synchronize_session=False)
     db.commit()
-    return found_post.first()
+    return found_post
