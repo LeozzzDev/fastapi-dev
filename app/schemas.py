@@ -32,3 +32,7 @@ class User(BaseModel):
 class CreateUserRequest(BaseModel):
     email: EmailStr
     password: str
+
+class UpdateUSerRequest(BaseModel):
+    email: EmailStr
+    password: str

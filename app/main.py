@@ -61,9 +61,16 @@ async def update_post(id: int, updated_post: schemas.UpdatePostRequest, db: Sess
 # users
 
 @app.get("/users", response_model=List[schemas.User])
-async def get_posts(db: Session = Depends(get_db)):
+async def get_users(db: Session = Depends(get_db)):
     posts = db.query(models.User).all()
     return posts
+    
+@app.get("/users/{id}", response_model=schemas.User)
+async def get_user(id: int, db: Session = Depends(get_db)):
+    found_user = db.query(models.User).filter(models.User.id == id).first()
+    if not found_user:
+        raise HTTPException(status_code=404, detail=f"user with id:{id} not found")
+    return found_user
 
 @app.post("/users", status_code=status.HTTP_201_CREATED, response_model=schemas.User)
 async def create_user(user: schemas.CreateUserRequest, db: Session = Depends(get_db)):
@@ -73,3 +80,25 @@ async def create_user(user: schemas.CreateUserRequest, db: Session = Depends(get
     db.commit()
     db.refresh(created_user)
     return created_user
+
+@app.delete("/users/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(id: int, db: Session = Depends(get_db)):
+    found_user = db.query(models.User).filter(models.User.id == id)
+
+    if not found_user.first():
+        raise HTTPException(status_code=404, detail=f"user with id:{id} not found")
+        
+    found_user.delete(synchronize_session=False)
+    db.commit()
+
+@app.put("/users/{id}", status_code=status.HTTP_204_NO_CONTENT)
+async def update_user(id: int, updated_user: schemas.UpdateUSerRequest, db: Session = Depends(get_db)):
+
+    found_user = db.query(models.User).filter(models.User.id == id)
+
+    if not found_user.first():
+        raise HTTPException(status_code=404, detail=f"user with id:{id} not found")
+
+    found_user.update(updated_user.dict(), synchronize_session=False)
+    db.commit()
+    return found_user.first()
