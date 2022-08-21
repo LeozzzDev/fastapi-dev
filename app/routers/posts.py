@@ -10,7 +10,7 @@ posts_router = APIRouter(prefix="/posts")
 @posts_router.get("/", response_model=List[schemas.Post])
 async def get_posts(
     db: Session = Depends(get_db), 
-    user_id: int = Depends(oauth2.get_current_user)
+    current_user: int = Depends(oauth2.get_current_user)
 ):
     posts = db.query(models.Post).all()
     return posts
@@ -19,7 +19,7 @@ async def get_posts(
 async def get_post(
     id: int, 
     db: Session = Depends(get_db),
-    user_id: int = Depends(oauth2.get_current_user)
+    current_user: int = Depends(oauth2.get_current_user)
 ):
     found_post = db.query(models.Post).filter(models.Post.id == id).first()
     if not found_post:
@@ -30,7 +30,7 @@ async def get_post(
 async def create_post(
     post: schemas.CreatePostRequest, 
     db: Session = Depends(get_db), 
-    user_id: int = Depends(oauth2.get_current_user)
+    current_user: int = Depends(oauth2.get_current_user)
 ):
     created_post = models.Post(**post.dict())
     db.add(created_post)
@@ -42,7 +42,7 @@ async def create_post(
 async def delete_post(
     id: int, 
     db: Session = Depends(get_db),
-    user_id: int = Depends(oauth2.get_current_user)
+    current_user: int = Depends(oauth2.get_current_user)
 ):
     found_post = db.query(models.Post).filter(models.Post.id == id)
     
@@ -57,7 +57,7 @@ async def update_post(
     id: int, 
     updated_post: schemas.UpdatePostRequest, 
     db: Session = Depends(get_db),
-    user_id: int = Depends(oauth2.get_current_user)
+    current_user: int = Depends(oauth2.get_current_user)
 ):
     found_post = db.query(models.Post).filter(models.Post.id == id)
 

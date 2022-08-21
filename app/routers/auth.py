@@ -5,7 +5,7 @@ from .. import models, schemas, utils, oauth2
 
 auth_router = APIRouter(prefix="/auth")
 
-@auth_router.post("/login")
+@auth_router.post("/login", response_model=schemas.Token)
 async def login(user_login_request: schemas.UserLoginRequest, db: Session = Depends(get_db)):
     found_user = db.query(models.User).filter(models.User.email == user_login_request.email).first()
 
